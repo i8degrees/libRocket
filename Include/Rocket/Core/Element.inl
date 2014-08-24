@@ -32,6 +32,11 @@ T Element::GetProperty(const String& name)
 {
 	const Property* property = GetProperty(name);
 	ROCKET_ASSERTMSG(property, "Invalid property name.");
+	if(property == NULL)
+	{
+		Variant val;
+		return val.Get<T>();
+	}
 	return property->Get< T >();
 }
 
