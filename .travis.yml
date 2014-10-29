@@ -1,0 +1,56 @@
+# travis-ci build script for libRocket fork
+#
+# TODO:
+# - [x] Build libRocket samples; I haven't bothered trying this yet.
+# - [ ] Re-enable static libs build?
+# - [ ] Linux build script.
+# - [ ] GCC build -- bonus round!
+# - [ ] Build with Python bindings -- bonus round!
+
+os:
+  # - linux
+  - osx
+
+# language: cpp
+language: objective-c
+
+compiler:
+  - clang
+  # - gcc
+
+before_install:
+  # We ought to be doing this as per travis-ci docs, but I'm ignoring it to
+  # save on build time :-P
+  # - brew update
+  - brew install freetype --universal
+  - brew install lua51 --universal
+
+  # Required for SDL2 Samples to be built
+  - brew install sdl2 --universal
+  - brew install sdl2_image --universal
+  - brew install glew --universal
+before_script:
+  - mkdir -p Build/build && cd Build/build
+  # Debug dylibs
+  - cmake -GXcode -DBUILD_SAMPLES=on -DBUILD_LUA_BINDINGS=on -DCMAKE_BUILD_TYPE=Debug -DROCKET_DEBUG=on -DCMAKE_VERBOSE_MAKEFILE=1 -DCMAKE_INSTALL_PREFIX=$HOME/Library/Frameworks/ ..
+
+  # Static libs (Release); building debug libs creates **huge** libs -- +150MB --
+  # for me :-/
+  #- cmake -GXcode -DBUILD_SAMPLES=on -DBUILD_LUA_BINDINGS=on -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=off -DROCKET_DEBUG=on -DCMAKE_VERBOSE_MAKEFILE=1 -DCMAKE_INSTALL_PREFIX=$HOME/Library/Frameworks/ ..
+script:
+  - xcodebuild build
+  - xcodebuild -target install
+
+# whitelist
+branches:
+  only:
+    - bugfix/sdl2
+    - dev
+    - master
+
+matrix:
+  allow_failures:
+    - os: linux
+
+notifications:
+  email: true
