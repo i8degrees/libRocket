@@ -21,7 +21,7 @@ compiler:
 before_install:
   # We ought to be doing this as per travis-ci docs, but I'm ignoring it to
   # save on build time :-P
-  # - brew update
+  - brew update
   - brew install freetype --universal
   - brew install lua51 --universal
 
