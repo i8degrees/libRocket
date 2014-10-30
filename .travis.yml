@@ -28,7 +28,8 @@ before_install:
   # Required for SDL2 Samples to be built
   - brew install sdl2 --universal
   - brew install sdl2_image --universal
-  - brew install glew --universal
+  #- brew install glew --universal
+  - brew install https://raw.githubusercontent.com/i8degrees/homebrew/feature/universal-glew/Library/Formula/glew.rb --universal -vd
 before_script:
   - mkdir -p Build/build && cd Build/build
   # Debug dylibs
