@@ -19,17 +19,15 @@ compiler:
   # - gcc
 
 before_install:
-  # We ought to be doing this as per travis-ci docs, but I'm ignoring it to
-  # save on build time :-P
   - brew update
   - brew install freetype --universal
+  # Required for building with Lua bindings
   - brew install lua51 --universal
 
   # Required for SDL2 Samples to be built
   - brew install sdl2 --universal
   - brew install sdl2_image --universal
-  #- brew install glew --universal
-  - brew install https://raw.githubusercontent.com/i8degrees/homebrew/feature/universal-glew/Library/Formula/glew.rb --universal -vd
+  - brew install glew --universal
 before_script:
   - mkdir -p Build/build && cd Build/build
   # Debug dylibs
@@ -41,13 +39,6 @@ before_script:
 script:
   - xcodebuild build
   - xcodebuild -target install
-
-# whitelist
-branches:
-  only:
-    - bugfix/sdl2
-    - dev
-    - master
 
 matrix:
   allow_failures:
