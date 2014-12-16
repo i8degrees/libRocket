@@ -435,6 +435,9 @@ void StyleSheetNode::GetApplicableDescendants(std::vector< const StyleSheetNode*
 				return;
 		}
 		break;
+		
+		default: 
+		break;
 	}
 
 	if (properties.GetNumProperties() > 0 ||
