@@ -86,8 +86,11 @@ if(NOT DEFINED ENV{FREETYPE_DIR})
 	set(ENV{FREETYPE_DIR} "${PROJECT_SOURCE_DIR}/../Dependencies")
 endif()
 
-if(NOT DEFINED ENV{Boost_DIR})
-	set(ENV{Boost_DIR} "${PROJECT_SOURCE_DIR}/../Dependencies")
+#if(NOT DEFINED ENV{Boost_DIR})
+#	set(ENV{Boost_DIR} "${PROJECT_SOURCE_DIR}/../Dependencies")
+#endif()
+if(NOT DEFINED ENV{BOOST_ROOT})
+	set(ENV{BOOST_ROOT} "${PROJECT_SOURCE_DIR}/../Dependencies/boost")
 endif()
 
 if(NOT DEFINED ENV{LUA_DIR})
@@ -167,7 +170,7 @@ else(APPLE)
 endif(APPLE)
 
 if(NOT BUILD_SHARED_LIBS)
-    add_definitions(-DSTATIC_LIB)
+	add_definitions(-DROCKET_STATIC_LIB)
 endif()
 
 #on windows, check for VC10 and fix the multiple compile target issue.
@@ -274,10 +277,13 @@ foreach(library ${LIBRARIES})
     )
     
     install(TARGETS ${NAME}
+            EXPORT libRocketTargets
             LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
             ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
             RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
     )
+
+    set(ROCKET_EXPORTED_TARGETS ${ROCKET_EXPORTED_TARGETS} ${NAME})
 endforeach(library)
 else(NOT BUILD_FRAMEWORK)
 	#===================================
@@ -335,11 +341,14 @@ else(NOT BUILD_FRAMEWORK)
 		)
 
     install(TARGETS ${NAME}
+            EXPORT libRocketTargets
             LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
             ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
             RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
             FRAMEWORK DESTINATION Library/Frameworks
     )
+
+    set(ROCKET_EXPORTED_TARGETS ${ROCKET_EXPORTED_TARGETS} ${NAME})
 endif(NOT BUILD_FRAMEWORK)
 
 # Build python bindings
@@ -357,8 +366,10 @@ if(BUILD_PYTHON_BINDINGS)
         set_target_properties(${NAME} PROPERTIES PREFIX "")
 
         install(TARGETS ${NAME}
+                EXPORT libRocketTargets
                 LIBRARY DESTINATION ${PYTHON_INSTDIR}
         )
+ 
     endforeach(library)
 endif()
 
@@ -380,10 +391,13 @@ if(BUILD_LUA_BINDINGS)
         )
         
         install(TARGETS ${NAME}
+            EXPORT libRocketTargets
             LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
             ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
             RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
         )
+        
+        set(ROCKET_EXPORTED_TARGETS ${ROCKET_EXPORTED_TARGETS} ${NAME})
     endforeach(library)
 endif()
 
@@ -454,7 +468,7 @@ endmacro()
 if(BUILD_SAMPLES)
     include(SampleFileList)
 
-    set(samples treeview customlog drag loaddocument)
+    set(samples treeview customlog drag loaddocument bitmapfont)
     set(tutorials template datagrid datagrid_tree tutorial_drag)
     
 if(NOT BUILD_FRAMEWORK)
@@ -796,4 +810,51 @@ if(BUILD_SAMPLES)
                 DESTINATION ${SAMPLES_DIR}/luainvaders
         )
     endif()
+endif()
+
+#===================================
+# Generate Config.cmake files ======
+#===================================
+
+# Try to include helper module
+include(CMakePackageConfigHelpers OPTIONAL
+  RESULT_VARIABLE PkgHelpers_AVAILABLE)
+# guard against older versions of cmake which do not provide it
+if(PkgHelpers_AVAILABLE)
+
+  set (INCLUDE_INSTALL_DIR "include")
+  set (LIB_INSTALL_DIR "lib")
+  set (INCLUDE_DIR "${PROJECT_SOURCE_DIR}/Include")
+
+  # generate configuration for install tree
+  configure_package_config_file(libRocketConfig.cmake.install.in
+    ${CMAKE_CURRENT_BINARY_DIR}/install/libRocketConfig.cmake
+    INSTALL_DESTINATION ${LIB_INSTALL_DIR}/libRocket/cmake
+    PATH_VARS INCLUDE_INSTALL_DIR LIB_INSTALL_DIR)
+  write_basic_package_version_file(
+    ${CMAKE_CURRENT_BINARY_DIR}/install/libRocketConfigVersion.cmake
+    VERSION ${PROJECT_VERSION}
+    COMPATIBILITY SameMajorVersion )
+  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/install/libRocketConfig.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/install/libRocketConfigVersion.cmake
+    DESTINATION ${LIB_INSTALL_DIR}/libRocket/cmake )
+  install(EXPORT libRocketTargets
+    DESTINATION ${LIB_INSTALL_DIR}/libRocket/cmake)
+
+  # generate configuration for build tree
+  configure_package_config_file(libRocketConfig.cmake.build.in
+    ${CMAKE_CURRENT_BINARY_DIR}/libRocketConfig.cmake
+    INSTALL_DESTINATION ${CMAKE_CURRENT_BINARY_DIR}
+    PATH_VARS INCLUDE_DIR CMAKE_CURRENT_BINARY_DIR)
+  export(TARGETS ${ROCKET_EXPORTED_TARGETS}
+    FILE "${CMAKE_CURRENT_BINARY_DIR}/libRocketTargets.cmake")
+  write_basic_package_version_file(
+    ${CMAKE_CURRENT_BINARY_DIR}/libRocketConfigVersion.cmake
+    VERSION ${PROJECT_VERSION}
+    COMPATIBILITY SameMajorVersion )
+  set(libRocket_DIR "${CMAKE_CURRENT_BINARY_DIR}" CACHE PATH "The directory containing a CMake configuration file for libRocket.")
+else()
+  message("If you wish to use find_package(libRocket) in your own project to find libRocket library"
+    " please update cmake to version which provides CMakePackageConfighelpers module"
+    " or write generators for libRocketConfig.cmake by yourself.")
 endif()
