@@ -140,6 +140,7 @@ foreach(library ${LIBRARIES})
     endif()
 
     install(TARGETS ${NAME}
+            EXPORT libRocketTargets
             LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
             ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
             RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
